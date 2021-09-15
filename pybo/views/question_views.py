@@ -1,6 +1,6 @@
 from datetime import datetime
-
-from sqlalchemy import func
+from flask import Blueprint, render_template, request, url_for, g, flash, current_app
+from sqlalchemy import func, nullslast
 from flask import Blueprint, render_template, request, url_for, g, flash
 from werkzeug.utils import redirect
 
@@ -11,6 +11,13 @@ from ..models import Question, Answer, User, question_voter
 from pybo.views.auth_views import login_required
 
 bp = Blueprint('question', __name__, url_prefix='/question')
+
+
+def _nullslast(obj):
+    if current_app.config['SQLALCHEMY_DATABASE_URI'].startswith("sqlite"):
+        return obj
+    else:
+        return nullslast(obj)
 
 
 @bp.route('/list/')
@@ -26,13 +33,14 @@ def _list():
             .group_by(question_voter.c.question_id).subquery()
         question_list = Question.query \
             .outerjoin(sub_query, Question.id == sub_query.c.question_id) \
+            .order_by(_nullslast(sub_query.c.num_voter.desc()), Question.create_date.desc())
             .order_by(sub_query.c.num_voter.desc(), Question.create_date.desc())
     elif so == 'popular':
         sub_query = db.session.query(Answer.question_id, func.count('*').label('num_answer')) \
             .group_by(Answer.question_id).subquery()
         question_list = Question.query \
             .outerjoin(sub_query, Question.id == sub_query.c.question_id) \
-            .order_by(sub_query.c.num_answer.desc(), Question.create_date.desc())
+            .order_by(_nullslast(sub_query.c.num_answer.desc()), Question.create_date.desc())
     else:  # 최근 질문
         question_list = Question.query.order_by(Question.create_date.desc())
 
