@@ -1,14 +1,13 @@
 from datetime import datetime
+
 from flask import Blueprint, render_template, request, url_for, g, flash, current_app
 from sqlalchemy import func, nullslast
-from flask import Blueprint, render_template, request, url_for, g, flash
 from werkzeug.utils import redirect
 
 from .. import db
 from ..forms import QuestionForm, AnswerForm
 from ..models import Question, Answer, User, question_voter
-
-from pybo.views.auth_views import login_required
+from ..views.auth_views import login_required
 
 bp = Blueprint('question', __name__, url_prefix='/question')
 
@@ -34,14 +33,13 @@ def _list():
         question_list = Question.query \
             .outerjoin(sub_query, Question.id == sub_query.c.question_id) \
             .order_by(_nullslast(sub_query.c.num_voter.desc()), Question.create_date.desc())
-            .order_by(sub_query.c.num_voter.desc(), Question.create_date.desc())
     elif so == 'popular':
         sub_query = db.session.query(Answer.question_id, func.count('*').label('num_answer')) \
             .group_by(Answer.question_id).subquery()
         question_list = Question.query \
             .outerjoin(sub_query, Question.id == sub_query.c.question_id) \
             .order_by(_nullslast(sub_query.c.num_answer.desc()), Question.create_date.desc())
-    else:  # 최근 질문
+    else:  # recent
         question_list = Question.query.order_by(Question.create_date.desc())
 
     # 조회
@@ -77,7 +75,8 @@ def detail(question_id):
 def create():
     form = QuestionForm()
     if request.method == 'POST' and form.validate_on_submit():
-        question = Question(subject=form.subject.data, content=form.content.data, create_date=datetime.now(), user=g.user)
+        question = Question(subject=form.subject.data, content=form.content.data,
+                            create_date=datetime.now(), user=g.user)
         db.session.add(question)
         db.session.commit()
         return redirect(url_for('main.index'))
