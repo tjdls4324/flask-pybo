@@ -2,3 +2,11 @@
     border-top:dotted 1px #ddd;
     font-size:0.8em;
 }
+
+.navbar-custom {
+    background-color: #c1d4e8;
+}
+
+.listbar-custom {
+    background-color: #e3e2de;
+}
