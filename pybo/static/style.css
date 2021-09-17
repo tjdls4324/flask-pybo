@@ -3,10 +3,15 @@
     font-size:0.8em;
 }
 
+.slogan-custom {
+    font-size:1rem;
+    font-weight:600;
+}
+
 .navbar-custom {
-    background-color: #c1d4e8;
+    background-color: #ddebf1;
 }
 
 .listbar-custom {
-    background-color: #e3e2de;
+    background-color: #f5f9fb;
 }
